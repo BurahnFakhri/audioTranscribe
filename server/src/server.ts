@@ -7,6 +7,7 @@ import { limiter } from "./middleware/rateLimiter";
 import { connectDB, disconnectDB } from "./config/db";
 import pinoHttp from 'pino-http';
 import logger from "./utils/logger";
+import transcriptionRouter from './routes/transcription.routes';
 
 
 const app = express();
@@ -20,11 +21,15 @@ app.use(cors({
 
 app.use(limiter);
 
+app.use(express.json());
+
 app.use(pinoHttp({ logger }))
 
 app.get('/health', (_req, res) => {
     res.json({ status: 'Running'})
 });
+
+app.use('/api/transcription', transcriptionRouter);
 
 const start = async () => {
     try {
