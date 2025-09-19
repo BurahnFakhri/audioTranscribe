@@ -5,6 +5,8 @@ import helmet from "helmet";
 import config from "./config";
 import { limiter } from "./middleware/rateLimiter";
 import { connectDB, disconnectDB } from "./config/db";
+import pinoHttp from 'pino-http';
+import logger from "./utils/logger";
 
 
 const app = express();
@@ -18,6 +20,8 @@ app.use(cors({
 
 app.use(limiter);
 
+app.use(pinoHttp({ logger }))
+
 app.get('/health', (_req, res) => {
     res.json({ status: 'Running'})
 });
@@ -26,10 +30,10 @@ const start = async () => {
     try {
         await connectDB();
         const server = app.listen(PORT, () => {
-            console.log(`transcribe server — express running. Port: ${PORT}`);
+            logger.info(`Transcribe express server running. Port: ${PORT}`);
         });
-        const shutdown = async () => {
-            console.log('Shutting down..');
+        const shutdown = async (signal?: string) => {
+            logger.info({ signal }, 'Shutting down...');
             await disconnectDB();
             server.close(async () => process.exit(0));
         }
@@ -37,7 +41,7 @@ const start = async () => {
         process.on('SIGTERM', shutdown);
 
     } catch (error) {
-        console.error("Startup error", error);
+        logger.fatal({ error }, 'Startup error');
         process.exit(1);
     }    
 }

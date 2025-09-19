@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import config from "./index";
+import logger from "../utils/logger";
 
 const MONGO_URI = config.mongoUri;
 
@@ -10,14 +11,14 @@ export async function connectDB(): Promise<void> {
 
     try {
         await mongoose.connect(MONGO_URI, {});
-        console.log('Mongo DB Connected');
+        logger.info('MongoDB connected');
     } catch (err) {
-        console.log(err);
+        logger.fatal({ err }, 'mongo connect error');
         throw err;
     }
 
     mongoose.connection.on('disconnected', () => {
-        console.warn('MongoDB disconnected')
+        logger.fatal('mongo connect error');
     })
 
     mongoose.connection.on('reconnected', () => {
@@ -25,12 +26,12 @@ export async function connectDB(): Promise<void> {
     })
 
     mongoose.connection.on('error', (err)=> {
-        console.error({ err }, 'MongoDB Error');
+        logger.error({ err }, 'mongo connect error');
     })
 }
 
 export async function disconnectDB(): Promise<void> {
     await mongoose.disconnect();
-    console.log('MongoDB Disconnected');
+    logger.info('mongodb is disconnected');
 } 
 
