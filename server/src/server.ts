@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from "helmet";
 import config from "./config";
 import { limiter } from "./middleware/rateLimiter";
-import { connectDB } from "./config/db";
+import { connectDB, disconnectDB } from "./config/db";
 
 
 const app = express();
@@ -25,13 +25,21 @@ app.get('/health', (_req, res) => {
 const start = async () => {
     try {
         await connectDB();
-        app.listen(PORT, () => {
+        const server = app.listen(PORT, () => {
             console.log(`transcribe server — express running. Port: ${PORT}`);
-        })
+        });
+        const shutdown = async () => {
+            console.log('Shutting down..');
+            await disconnectDB();
+            server.close(async () => process.exit(0));
+        }
+        process.on('SIGINT', shutdown);
+        process.on('SIGTERM', shutdown);
 
     } catch (error) {
         console.error("Startup error", error);
-    }
+        process.exit(1);
+    }    
 }
 
 start();

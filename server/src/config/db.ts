@@ -29,3 +29,8 @@ export async function connectDB(): Promise<void> {
     })
 }
 
+export async function disconnectDB(): Promise<void> {
+    await mongoose.disconnect();
+    console.log('MongoDB Disconnected');
+} 
+
