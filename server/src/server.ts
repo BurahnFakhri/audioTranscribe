@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from "helmet";
 import config from "./config";
 import { limiter } from "./middleware/rateLimiter";
+import { connectDB } from "./config/db";
 
 
 const app = express();
@@ -21,10 +22,18 @@ app.get('/health', (_req, res) => {
     res.json({ status: 'Running'})
 });
 
-app.listen(PORT, ()=> {
-    console.log(`transcribe server — express running. Port: ${PORT}`);
-})
+const start = async () => {
+    try {
+        await connectDB();
+        app.listen(PORT, () => {
+            console.log(`transcribe server — express running. Port: ${PORT}`);
+        })
+
+    } catch (error) {
+        console.error("Startup error", error);
+    }
+}
+
+start();
 
 
-// const PORT = process.env.PORT || 4000;
-// console.log(`transcribe server — dev boot (no runtime frameworks installed). Port: ${PORT}`);
