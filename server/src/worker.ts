@@ -5,10 +5,13 @@ import logger from './utils/logger';
 import TranscriptionModel from './models/transcription.model';
 import { processTranscription } from './services/transcription.service';
 import { connectDB } from './config/db';
+import type { Job } from 'agenda';
 
 // Define job processor
-agenda.define('transcription:process', { concurrency: 2, lockLifetime: 1000 * 60 * 60 }, async (job) => {
-  const data = job.attrs.data as { transcriptionId?: string; audioUrl?: string };
+agenda.define('transcription:process', 
+  { concurrency: 2, lockLifetime: 1000 * 60 * 60 }, 
+  async (job: Job<{ transcriptionId: string; audioUrl: string }>) => {
+  const data = job.attrs.data as { transcriptionId: string; audioUrl: string };
   const { transcriptionId, audioUrl } = data;
 
   if (!transcriptionId || !audioUrl) {

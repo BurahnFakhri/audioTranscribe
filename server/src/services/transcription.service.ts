@@ -6,6 +6,7 @@ import MockTranscriber from './transcribers/mock.transcriber';
 import logger from '../utils/logger';
 import { enqueueTranscriptionJob } from '../queue';
 import { ListOptions, ListResult } from './types/transcription.types';
+import GeminiTranscriber from './transcribers/gemini.transcriber';
 
 
 const transcriber = new MockTranscriber();
@@ -72,9 +73,14 @@ export async function processTranscription(
     // Download audio (validates content-type and saves to disk)
     const { buffer, contentType, size, savedPath } = await downloadAudio(effectiveAudioUrl);
     logger.info({ transcriptionId, size, contentType, savedPath }, 'Audio downloaded, invoking transcriber');
-
-    // Transcribe using pluggable transcriber (mock for now)
-    const text = await transcriber.transcribe(buffer, effectiveAudioUrl);
+    let text = '';
+    if(process.env.GEMINI_API_KEY) {
+      const transcriber = new GeminiTranscriber(process.env.GEMINI_API_KEY!);
+      // Transcribe using gemini & if it's fail then it fallback to mock
+      text = await transcriber.transcribe(String(savedPath), audioUrl, contentType);
+    } else {
+      text = await transcriber.transcribe(buffer, effectiveAudioUrl);
+    }
 
     // Update doc with results
     doc.filePath = String(savedPath);
